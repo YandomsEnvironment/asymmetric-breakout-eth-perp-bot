@@ -1,0 +1,6 @@
+Strategy,Sharpe_0bps,Return_0bps,Sharpe_2bps,Return_2bps,Sharpe_5bps,Return_5bps,Robust
+ATR_Volatility_Breakout,1.93,54.71,1.56,41.14,1.08,25.25,YES (Robust)
+ZeroFee_Mean_Reversion,-0.61,-5.28,-0.69,-5.93,-1.27,-10.09,FRAGILE
+MTF_Trend_Pullback,0.59,9.29,0.2,1.21,-0.34,-9.09,FRAGILE
+Bollinger_Keltner_Squeeze,0.8,12.59,0.25,2.18,0.18,0.93,YES (Robust)
+Volume_Momentum_Flow,0.47,7.92,0.24,1.25,-0.56,-19.49,FRAGILE
