@@ -1,5 +1,5 @@
 """
-trade_analysis.py - Detailed trade frequency and theoretical profit projections
+trade_analysis.py - Detailed trade expectancy and holding times for Asymmetric Breakout Champion
 """
 
 import sys
@@ -10,15 +10,14 @@ import numpy as np
 sys.path.insert(0, r"C:\Users\lumin\Desktop\strat-trading-eth")
 from engine.backtester import Backtester
 from engine.walk_forward import split_in_sample_out_sample
-from strategies.s1_volatility_breakout import VolatilityBreakoutStrategy
+from strategies.s6_asymmetric_breakout import AsymmetricBreakoutStrategy
 
 df_1h = pd.read_csv(r"C:\Users\lumin\Desktop\strat-trading-eth\data\lighter_eth_1h.csv")
 df_1h["timestamp"] = pd.to_datetime(df_1h["timestamp"], utc=True)
 df_is, df_oos = split_in_sample_out_sample(df_1h, 0.60)
 
-strat = VolatilityBreakoutStrategy()
+strat = AsymmetricBreakoutStrategy()
 
-# Run across slippage scenarios
 scenarios = [
     ("Zero Fee Baseline (0 bps)", 0.0),
     ("Realistic Order Book (2 bps)", 2.0),
@@ -26,7 +25,7 @@ scenarios = [
 ]
 
 print("=" * 80)
-print("TRADE FREQUENCY & PROFIT PROJECTION REPORT")
+print("TRADE FREQUENCY & PROFIT PROJECTION REPORT - ASYMMETRIC BREAKOUT CHAMPION")
 print("=" * 80)
 
 days = (df_oos["timestamp"].iloc[-1] - df_oos["timestamp"].iloc[0]).total_seconds() / 86400.0
@@ -34,7 +33,7 @@ print(f"Out-of-Sample Period: {df_oos['timestamp'].iloc[0].strftime('%Y-%m-%d')}
 print(f"Total Duration: {days:.1f} days (~{days/30.5:.1f} months, ~{days/365.25:.2f} years)\n")
 
 for label, slip in scenarios:
-    bt = Backtester(initial_capital=10000.0, fee_rate=0.0, slippage_bps=slip, risk_per_trade=0.015)
+    bt = Backtester(initial_capital=200.0, fee_rate=0.0, slippage_bps=slip, risk_per_trade=0.015, max_leverage=2.5)
     res = bt.run(df_oos, strat)
     trades = res["trades"]
     m = res["metrics"]
@@ -53,7 +52,6 @@ for label, slip in scenarios:
     avg_pnl = np.mean([t["pnl"] for t in trades])
     net_profit = sum([t["pnl"] for t in trades])
     
-    # Monthly profit estimate on $10k
     monthly_ret_pct = ((1.0 + m["cumulative_return_pct"]/100.0) ** (1.0 / (days/30.5)) - 1.0) * 100.0
     
     print(f"--- Scenario: {label} ---")
@@ -66,9 +64,10 @@ for label, slip in scenarios:
     print(f"  Win Rate            : {m['win_rate']:.1f}%")
     print(f"  Avg Win             : +${avg_win:.2f} | Avg Loss: -${avg_loss:.2f} (Payoff Ratio: {wl_ratio:.2f})")
     print(f"  Expectancy / Trade  : +${avg_pnl:.2f}")
-    print(f"  Net Profit ($10k cap): +${net_profit:.2f} (+{m['cumulative_return_pct']:.1f}%)")
+    print(f"  Net Profit ($200 cap): +${net_profit:.2f} (+{m['cumulative_return_pct']:.1f}%) -> Final: ${m['ending_capital']:.2f}")
     print(f"  Monthly Return (CAGR): ~{monthly_ret_pct:.2f}% per month")
     print(f"  Annualized CAGR     : {m['cagr_pct']:.1f}%")
     print(f"  Max Drawdown        : {m['max_drawdown_pct']:.1f}%")
     print(f"  Sharpe Ratio        : {m['sharpe_ratio']:.2f}")
+    print(f"  Calmar Ratio        : {m['calmar_ratio']:.2f}")
     print()
