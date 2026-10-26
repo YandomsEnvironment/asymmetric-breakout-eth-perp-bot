@@ -23,6 +23,7 @@ if BASE_DIR not in sys.path:
 import bot.config as config
 from bot.lighter_client import LighterClient
 from strategies.s1_volatility_breakout import VolatilityBreakoutStrategy
+from strategies.s6_asymmetric_breakout import AsymmetricBreakoutStrategy
 
 
 def parse_args():
@@ -41,7 +42,10 @@ class ETHPerpBot:
         if self.dry_run:
             self.client.simulated_balance = initial_capital
 
-        self.strategy = VolatilityBreakoutStrategy(**config.STRATEGY_PARAMS)
+        if config.ACTIVE_STRATEGY == "ASYMMETRIC":
+            self.strategy = AsymmetricBreakoutStrategy(**config.STRATEGY_PARAMS)
+        else:
+            self.strategy = VolatilityBreakoutStrategy(**config.STRATEGY_PARAMS)
         self.last_processed_timestamp = None
         self.running = True
 

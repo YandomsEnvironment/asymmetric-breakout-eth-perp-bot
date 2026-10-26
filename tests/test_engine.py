@@ -20,6 +20,7 @@ if BASE_DIR not in sys.path:
 from engine.backtester import Backtester
 from engine.metrics import compute_metrics
 from strategies.s1_volatility_breakout import VolatilityBreakoutStrategy
+from strategies.s6_asymmetric_breakout import AsymmetricBreakoutStrategy
 from bot.lighter_client import LighterClient
 
 
@@ -75,6 +76,29 @@ def test_pessimistic_intra_bar_execution():
     if len(trades) > 0:
         # Must be STOP_LOSS, NOT TAKE_PROFIT
         assert trades[0]["exit_reason"] == "STOP_LOSS"
+
+
+def test_asymmetric_strategy_causality():
+    """Verifies that Asymmetric Breakout strategy has zero lookahead."""
+    n = 300
+    dates = pd.date_range("2026-01-01", periods=n, freq="1h")
+    prices = 2000.0 + np.cumsum(np.random.normal(0, 10, n))
+    df = pd.DataFrame({
+        "timestamp": dates,
+        "open": prices,
+        "high": prices + 5.0,
+        "low": prices - 5.0,
+        "close": prices + 1.0,
+        "volume_eth": 100.0,
+        "volume_usd": 200000.0
+    })
+
+    strat = AsymmetricBreakoutStrategy()
+    df_full = strat.generate_signals(df.copy())
+    df_trunc = strat.generate_signals(df.iloc[:151].copy())
+
+    assert np.isclose(df_full["ema_trend"].iloc[150], df_trunc["ema_trend"].iloc[150])
+    assert df_full["signal"].iloc[150] == df_trunc["signal"].iloc[150]
 
 
 def test_lighter_client_orderbook():

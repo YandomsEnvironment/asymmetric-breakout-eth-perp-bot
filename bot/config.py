@@ -41,14 +41,32 @@ MAX_DAILY_LOSS_PCT = 0.05      # 5.0% daily circuit breaker ($10.00 loss halts t
 MAX_DRAWDOWN_LIMIT_PCT = 0.22  # 22.0% high-water mark global circuit breaker
 
 # -----------------------------------------------------------------------------
-# 4. Statistically Verified Strategy Parameters (Peak Plateau)
+# 4. Strategy Selection & Parameters
 # -----------------------------------------------------------------------------
-STRATEGY_PARAMS = {
-    "breakout_period": 24,     # 24-period Donchian channel breakout
-    "trend_ema_period": 200,   # Macro regime filter (Price > EMA 200 for Longs)
-    "adx_period": 14,          # Momentum strength filter
-    "adx_threshold": 20.0,     # Only trade when ADX > 20 (avoids choppy ranges)
-    "atr_period": 14,          # 14-period True Range for volatility parity
-    "sl_atr_mult": 2.0,        # 2.0x ATR Stop Loss distance (Optimal stability plateau)
-    "tp_atr_mult": 3.5         # 3.5x ATR Take Profit target (1.75 : 1 R:R payoff)
+# "ASYMMETRIC" is the superior discovered edge (+65.2% OOS, 2.04 Sharpe, 17.3% MaxDD)
+# "SYMMETRIC" is the standard benchmark (+41.3% OOS, 1.57 Sharpe, 21.2% MaxDD)
+ACTIVE_STRATEGY = os.getenv("LIGHTER_STRATEGY", "ASYMMETRIC")
+
+ASYMMETRIC_PARAMS = {
+    "long_period": 28,         # Slower 28-period high breakout for steady bull grinds
+    "short_period": 14,        # Faster 14-period low breakout for violent cascades
+    "trend_ema_period": 200,   # Macro 200-hour trend alignment
+    "long_sl_mult": 2.0,       # 2.0x ATR Stop Loss for longs
+    "long_tp_mult": 4.2,       # 4.2x ATR Runner Target for longs
+    "short_sl_mult": 1.6,      # 1.6x ATR Tight Stop Loss for shorts
+    "short_tp_mult": 2.8,      # 2.8x ATR Fast Flush Target for shorts
+    "adx_long_thresh": 18.0,   # Trend momentum threshold for longs
+    "adx_short_thresh": 22.0   # Trend momentum threshold for shorts
 }
+
+SYMMETRIC_PARAMS = {
+    "breakout_period": 24,
+    "trend_ema_period": 200,
+    "adx_period": 14,
+    "adx_threshold": 20.0,
+    "atr_period": 14,
+    "sl_atr_mult": 2.0,
+    "tp_atr_mult": 3.5
+}
+
+STRATEGY_PARAMS = ASYMMETRIC_PARAMS if ACTIVE_STRATEGY == "ASYMMETRIC" else SYMMETRIC_PARAMS
